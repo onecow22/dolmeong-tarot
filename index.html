@@ -1147,11 +1147,14 @@ $('saveAll').onclick=async()=>{
  for(let k=0;k<3;k++){ download(k); await new Promise(r=>setTimeout(r,400)); }
  toast('이미지 3장을 저장했어요');
 };
-function resultText(){
- const line=(s,k)=>{const p=picks[s][k],c=CARDS[p.card];return `· ${STEPS[s].tag[k]} — ${c.no}. ${c.ko}${p.rev?' (역방향)':''}`+(s===1?` : ${c[p.rev?'rev':'up'].t}`:'');};
- const adv=picks[1][2]; const tip=adv?CARDS[adv.card][adv.rev?'rev':'up'].tip:'';
- return `🪨 2027년 돌멍 타로 운세\n\n[2026년 돌아보기]\n${[0,1,2].map(k=>line(0,k)).join('\n')}\n\n[2027년 올해의 운세]\n${[0,1,2].map(k=>line(1,k)).join('\n')}\n\n돌멍이의 한마디: ${tip}\n\n${location.href.split(/[?#]/)[0]}`;
+function promoText(withUrl){
+ const names=picks[1].map(p=>CARDS[p.card].ko).join(' · ');
+ return `🪨 돌멍이로 뽑아보는 2027년 운세
+나의 2027년의 타로 카드는 ${names} 인데,
+너의 2027년은 어떤 카드일까?
+카드 6장으로 2026년을 돌아보고 2027년을 미리 대비해봐!👇` + (withUrl ? '\n' + location.href.split(/[?#]/)[0] : '');
 }
+function resultText(){ return promoText(true); }
 $('copyTxt').onclick=async()=>{
  track('copy_result'); const t=resultText();
  try{await navigator.clipboard.writeText(t);toast('결과를 복사했어요');}
@@ -1159,7 +1162,7 @@ $('copyTxt').onclick=async()=>{
 };
 $('shareBtn').onclick=async()=>{
  const url=location.href.split(/[?#]/)[0];
- const text=`나의 2027 올해의 카드는 ‘${picks[1].map(p=>CARDS[p.card].ko).join('·')}’! 돌멍이에게 내 운세도 물어봐`;
+ const text=promoText(false);
  const files=shots.filter(Boolean).map(x=>x.file);
  if(navigator.share){
   try{
