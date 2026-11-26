@@ -60,7 +60,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #ffd2a8;outline-offset:2p
 .step{padding:26px 0 30px;border-bottom:1.5px dashed #f6ecdc40;scroll-margin-top:8px}
 .step h2{font-size:clamp(24px,6.5vw,30px);margin:0;line-height:1.25}
 .step .sub{margin:12px 0 0;color:var(--muted)}
-.center{display:flex;justify-content:center;margin-top:22px}
+.center{display:flex;justify-content:center;margin-top:22px;gap:10px;flex-wrap:wrap}
 /* deck */
 .table{position:relative;margin-top:18px}
 .hint{text-align:center;font-family:"Jua";font-size:15px;min-height:24px;color:var(--cream)}
@@ -928,7 +928,7 @@ function sectionHTML(s){
   <div class="table"><div class="hint"></div><div class="deck"></div></div>
   <div class="center start"><button class="btn shuffle">카드 섞기</button></div>
   <div class="slots"></div>
-  <div class="center acts" hidden><button class="btn line again">다시 뽑기</button></div>
+  <div class="center acts" hidden><button class="btn line again">다시 뽑기</button><button class="btn reveal">결과 보기</button></div>
   <div class="reading"></div>
   <div class="center next" hidden>${s===0?'<button class="btn go27">2027년 운세 보러 가기 →</button>':'<button class="btn goShare">공유로 복채 대신하기</button>'}</div>`;
 }
@@ -963,7 +963,7 @@ function pick(s,btn){
  picks[s].push({card,rev}); btn.style.opacity=0; btn.style.pointerEvents='none';
  track('card_pick',{step:s===0?'2026':'2027', pick_order:picks[s].length});
  renderSlots(s); setHint(s);
- if(picks[s].length===3){ q(s,'.acts').hidden=false;
+ if(picks[s].length===3){ q(s,'.acts').hidden=false; q(s,'.reveal').hidden=false;
   setTimeout(()=>{q(s,'.deck').innerHTML='';layout(s)},300); }
 }
 function renderSlots(s){
@@ -981,7 +981,12 @@ function openCard(s,k){
 }
 function complete(s){
  track('step_complete',{step:s===0?'2026':'2027', cards:picks[s].map(p=>CARDS[p.card].ko+(p.rev?'(역)':'')).join(' / ')});
- q(s,'.hint').textContent=''; q(s,'.next').hidden=false;
+ q(s,'.hint').textContent=''; q(s,'.next').hidden=false; q(s,'.reveal').hidden=true;
+}
+function revealAll(s){
+ track('reveal_all',{step:s===0?'2026':'2027'});
+ q(s,'.reveal').hidden=true;
+ [0,1,2].filter(k=>!q(s,`.flip[data-k="${k}"]`).classList.contains('open')).forEach((k,i)=>setTimeout(()=>openCard(s,k),i*350));
 }
 const thumbHTML=(card,rev)=>`<div class="thumb${rev?' rev':''}" aria-hidden="true">${faceHTML(card)}</div>`;
 function renderReading(s){
@@ -1174,6 +1179,7 @@ function bind(s){
   const t=e.target;
   if(t.closest('.shuffle')) shuffle(s);
   else if(t.closest('.again')){ track('draw_again',{step:s===0?'2026':'2027'}); if(s===0){ $('sec1').hidden=true; picks[1]=[]; $('sec2').hidden=true;} shuffle(s); }
+  else if(t.closest('.reveal')) revealAll(s);
   else if(t.closest('.go27')) startStep2();
   else if(t.closest('.goShare')) startShare();
   else { const cb=t.closest('.cb'); if(cb) return pick(s,cb); const f=t.closest('.flip'); if(f) openCard(s,+f.dataset.k); }
